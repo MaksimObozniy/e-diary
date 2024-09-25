@@ -2,14 +2,22 @@ from datacenter.models import Schoolkid, Mark, Chastisement, Commendation, Teach
 import random 
 
 
+def get_schoolkid(schoolkid_name):
+    try:
+        return Schoolkid.objects.get(full_name__contains=schoolkid_name)
+    except Schoolkid.DoesNotExist:
+        print(f"Ученик с именем {schoolkid_name} не найден.")
+    except Schoolkid.MultipleObjectsReturned:
+        print(f"Найдено несколько учеников с именем {schoolkid_name}. Уточните запрос.")
+    return None
+
+
 def fix_marks(schoolkid_name):
     try:
-        schoolkid = Schoolkid.objects.get(full_name__contains=schoolkid_name)
+        schoolkid = get_schoolkid(schoolkid_name)
         bad_marks = Mark.objects.filter(schoolkid=schoolkid, points__in=[2,3])
         
-        for mark in bad_marks:
-            mark.points = 5
-            mark.save()
+        bad_marks.update(points=5)
             
         print(f"Все оценки {schoolkid_name} были изменены :)")
         
@@ -19,15 +27,21 @@ def fix_marks(schoolkid_name):
         
 def fix_chastisements(schoolkid_name):
     try:
-        schoolkid = Schoolkid.objects.get(full_name__contains=schoolkid_name)
+        schoolkid = get_schoolkid(schoolkid_name)
         chastisements = Chastisement.objects.filter(schoolkid=schoolkid)
         
-        for chastisement in chastisements:
-            chastisement.delete()
+        chastisements.delete()
+        
         print(f"Все замечания {schoolkid_name} были удалены :)")
         
     except Schoolkid.DoesNotExist:
-        print(f"Ученик с именем {schoolkid_name} не найден")
+        print(f"Ученик с именем {schoolkid_name} не найден.")
+    
+    except Schoolkid.MultipleObjectsReturned:
+        print(f"Найдено несколько учеников с именем {schoolkid_name}. Уточните запрос.")
+
+    except Exception as e:
+        print(f"Произошла ошибка: {e}")
         
 
 def create_commendation(schoolkid_name, subject_title):
@@ -38,14 +52,19 @@ def create_commendation(schoolkid_name, subject_title):
             "Хвалю",
             "Отличная работа!"
         ]
-        schoolkid = Schoolkid.objects.get(full_name__contains=schoolkid_name)
+        schoolkid = get_schoolkid(schoolkid_name)
         subject = Subject.objects.filter(title=subject_title, year_of_study=schoolkid.year_of_study).first()
-    
+        
+        if not subject:
+            print(f"Предмет '{subject_title}' не найден. Проверьте правильность написания.")
+            return
+        
+        
         lesson = Lesson.objects.filter(
             year_of_study=schoolkid.year_of_study,
             group_letter=schoolkid.group_letter,
             subject=subject 
-        ).first()
+        ).order_by('-date').first()
     
         commendation_text = random.choice(commendations)
     

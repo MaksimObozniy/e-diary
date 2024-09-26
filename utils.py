@@ -6,10 +6,9 @@ def get_schoolkid(schoolkid_name):
     try:
         return Schoolkid.objects.get(full_name__contains=schoolkid_name)
     except Schoolkid.DoesNotExist:
-        print(f"Ученик с именем {schoolkid_name} не найден.")
+        raise ValueError(f"Ученик с именем {schoolkid_name} не найден.")
     except Schoolkid.MultipleObjectsReturned:
-        print(f"Найдено несколько учеников с именем {schoolkid_name}. Уточните запрос.")
-    return None
+        raise ValueError(f"Найдено несколько учеников с именем {schoolkid_name}. Уточните запрос.")
 
 
 def fix_marks(schoolkid_name):
@@ -21,8 +20,8 @@ def fix_marks(schoolkid_name):
             
         print(f"Все оценки {schoolkid_name} были изменены :)")
         
-    except Schoolkid.DoesNotExist:
-        print(f"Ученик с именем {schoolkid_name} не найден")
+    except ValueError as e:
+        print(e)
         
         
 def fix_chastisements(schoolkid_name):
@@ -33,12 +32,6 @@ def fix_chastisements(schoolkid_name):
         chastisements.delete()
         
         print(f"Все замечания {schoolkid_name} были удалены :)")
-        
-    except Schoolkid.DoesNotExist:
-        print(f"Ученик с именем {schoolkid_name} не найден.")
-    
-    except Schoolkid.MultipleObjectsReturned:
-        print(f"Найдено несколько учеников с именем {schoolkid_name}. Уточните запрос.")
 
     except Exception as e:
         print(f"Произошла ошибка: {e}")
@@ -78,10 +71,6 @@ def create_commendation(schoolkid_name, subject_title):
     
         print(f"Похвала {schoolkid_name} по уроку {subject_title} была добавлена")
     
-    except Schoolkid.DoesNotExist:
-        print(f"Ученик с именем {schoolkid_name} не найден")
-    except Schoolkid.MultipleObjectsReturned:
-        print(f"Найдено несколько учеников с именем {schoolkid_name}. Уточните запрос")   
     except ValueError as e:
         print(e)
     except Exception as e:
